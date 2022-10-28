@@ -26,8 +26,9 @@ inputs:
     description: Place where coverity commands are found. Ex. /coverity/bin/. Not required if Coverity tools are in PATH.
     required: false
   intermediate_dir:
-    description: Itermediate directory
-    required: true
+    description: Itermediate directory. default=${{github.workspace}}/idir
+    required: false
+    default: ${{github.workspace}}/idir
   log_level:
     description: Logging level
     default: DEBUG
