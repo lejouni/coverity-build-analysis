@@ -72,8 +72,10 @@ runs:
   steps:
     # First step is to run the Coverity capture phase with cov-build
     - run: cov-build --dir ${{inputs.intermediate_dir}} ${{inputs.cov_build_params}} ${{inputs.build_command}}
+      shell: bash
     # Second phase is to run the Coverity Analysis
     - run: cov-analyze --dir ${{inputs.intermediate_dir}} ${{inputs.cov_analysis_params}}
+      shell: bash
     # Third phase is the commit and that is done with coverity-commit-checker -action.
     - name: Coverity Commit phase
       uses: lejouni/coverity-commit-checker@v5
