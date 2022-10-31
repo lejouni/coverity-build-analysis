@@ -6,25 +6,28 @@ branding:
   color: blue
 inputs:
   project:
-    description: Coverity Connect project name. If not given, then using env.project as a default
+    description: Coverity Connect project name. If not given, then using project from environment variables as a default
     required: false
     default: ${{env.project}}
   stream:
-    description: Coverity Connect project stream name. If not given, then using env.stream as a default
+    description: Coverity Connect project stream name. If not given, then using stream from environment variables as a default
     required: false
     default: ${{env.stream}}
   cov_username:
     description: Coverity Connect username
-    required: true
+    required: false
+    default: ${{github.env.cov_username}}
   cov_password:
     description: Coverity Connect password
-    required: true
+    required: false
+    default: ${{github.env.cov_password}}
   cov_url:
     description: URL for Coverity Connect where the analysis tar file can be downloaded
     required: true
   cov_installation_dir:
     description: Place where coverity commands are found. Ex. /coverity/bin/. Not required if Coverity tools are in PATH.
     required: false
+    default: ${{github.env.cov_installation_dir}}
   intermediate_dir:
     description: Itermediate directory. default=github.workspace/idir
     required: false
@@ -78,7 +81,7 @@ runs:
       shell: bash
     # Third phase is the commit and that is done with coverity-commit-checker -action.
     - name: Coverity Commit phase
-      uses: lejouni/coverity-commit-checker@v5.1
+      uses: lejouni/coverity-commit-checker@v5.2
       with:
         project: ${{inputs.project}}
         stream: ${{inputs.stream}}
