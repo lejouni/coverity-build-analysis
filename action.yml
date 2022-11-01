@@ -5,33 +5,6 @@ branding:
   icon: code
   color: blue
 inputs:
-  project:
-    description: Coverity Connect project name. If not given, then using project from environment variables as a default
-    required: false
-    default: ${{env.project}}
-  stream:
-    description: Coverity Connect project stream name. If not given, then using stream from environment variables as a default
-    required: false
-    default: ${{env.stream}}
-  cov_username:
-    description: Coverity Connect username
-    required: false
-    default: ${{github.env.cov_username}}
-  cov_password:
-    description: Coverity Connect password
-    required: false
-    default: ${{github.env.cov_password}}
-  cov_url:
-    description: URL for Coverity Connect where the analysis tar file can be downloaded
-    required: true
-  cov_installation_dir:
-    description: Place where coverity commands are found. Ex. /coverity/bin/. Not required if Coverity tools are in PATH.
-    required: false
-    default: ${{github.env.cov_installation_dir}}
-  intermediate_dir:
-    description: Itermediate directory. default=github.workspace/idir
-    required: false
-    default: ${{github.workspace}}/idir
   log_level:
     description: Logging level
     default: DEBUG
@@ -74,22 +47,21 @@ runs:
   using: composite
   steps:
     # First step is to run the Coverity capture phase with cov-build
-    - run: cov-build --dir ${{inputs.intermediate_dir}} ${{inputs.cov_build_params}} ${{inputs.build_command}}
+    - run: cov-build --dir ${{env.cov_intermediate_dir}} ${{inputs.cov_build_params}} ${{inputs.build_command}}
       shell: bash
     # Second phase is to run the Coverity Analysis
-    - run: cov-analyze --dir ${{inputs.intermediate_dir}} ${{inputs.cov_analysis_params}}
+    - run: cov-analyze --dir ${{env.cov_intermediate_dir}} ${{inputs.cov_analysis_params}}
       shell: bash
-    # Third phase is the commit and that is done with coverity-commit-checker -action.
+    # Fourth phase is the commit and that is done with coverity-commit-checker -action.
     - name: Coverity Commit phase
-      uses: lejouni/coverity-commit-checker@v5.2
+      uses: lejouni/coverity-commit-checker@v5.6.1
       with:
-        project: ${{inputs.project}}
-        stream: ${{inputs.stream}}
-        cov_username: ${{inputs.cov_username}}
-        cov_password: ${{inputs.cov_password}}
-        cov_url: ${{inputs.cov_url}}
-        intermediate_dir: ${{inputs.intermediate_dir}}
-        cov_installation_dir: ${{inputs.cov_installation_dir}}
+        project: ${{env.project}}
+        stream: ${{env.stream}}
+        cov_username: ${{env.cov_username}}
+        cov_password: ${{env.cov_password}}
+        cov_url: ${{env.cov_url}}
+        intermediate_dir: ${{env.cov_intermediate_dir}}
         log_level: ${{inputs.log_level}}
         teams_webhook_url: ${{inputs.teams_webhook_url}}
         force_commit: ${{inputs.force_commit}}
@@ -97,4 +69,3 @@ runs:
         break_build: ${{inputs.break_build}}
         emit_threshold: ${{inputs.emit_threshold}}
         viewID: ${{inputs.viewID}}
-
