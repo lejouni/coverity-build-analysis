@@ -31,6 +31,21 @@ inputs:
   viewID:
     description: ID of that view which result is used to get findings
     required: false
+  cov_analysis_params:
+    description: Additional parameters for cov-analyze phase
+    required: false
+    default: --webapp-security --security --strip-path=${{github.workspace}} -en HARDCODED_CREDENTIALS
+  cov_incremental_analysis_params:
+    description: Additional parameters for cov-run-desktop phase
+    required: false
+    default: --set-new-defect-owner false --whole-program --ignore-uncapturable-inputs true --reference-snapshot="latest" --present-in-reference false --webapp-security --security --strip-path=${{github.workspace}} -en HARDCODED_CREDENTIALS
+  cov_analysis_mode:
+    description: Analysis mode will tell the action that is full or incremental analysis requested, Options are full and incremental
+    required: false
+    default: full
+  github_access_token:
+    description: This is required when using incremental analysis mode. This is used to get modified files via Github Api
+    required: false
   build_command:
     description: Application build command. Ex. mvn clean install
     required: true
@@ -38,10 +53,6 @@ inputs:
     description: Additional parameters for cov-build phase
     required: false
     default: --fs-capture-search ${{github.workspace}} --fs-capture-search-exclude-regex \"[/\\\\]test[/\\\\]\"
-  cov_analysis_params:
-    description: Additional parameters for cov-analyze phase
-    required: false
-    default: --webapp-security --security --strip-path=${{github.workspace}} -en HARDCODED_CREDENTIALS
 
 runs:
   using: composite
@@ -50,11 +61,34 @@ runs:
     - run: cov-build --dir ${{env.cov_intermediate_dir}} ${{inputs.cov_build_params}} ${{inputs.build_command}}
       shell: bash
     # Run the Coverity Analysis
-    - run: cov-analyze --dir ${{env.cov_intermediate_dir}} ${{inputs.cov_analysis_params}}
+    - if: ${{inputs.cov_analysis_mode == 'full'}}
+      run: cov-analyze --dir ${{env.cov_intermediate_dir}} ${{inputs.cov_analysis_params}}
       shell: bash
-    # Commit and that is done with coverity-commit-checker -action.
-    - name: Coverity Commit phase
-      uses: lejouni/coverity-commit-checker@v5.6.1
+    - if: ${{inputs.cov_analysis_mode == 'incremental'}}
+      run: |
+        export mod_files=$(curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{inputs.github_access_token}}" ${{github.api_url}}/repos/${{github.repository}}/commits/${{github.sha}} | jq .files | jq -r '.[] | .filename' | tr "\r\n" " ")
+        if [[ ! -n "${mod_files// /}" ]]; then echo "No changed files that pass the filter. Exiting"; exit 0; fi
+        cov-run-desktop --dir ${{env.cov_intermediate_dir}} ${{inputs.cov_incremental_analysis_params}} --url="${{env.cov_url}}" --stream="${{env.stream}}" --user="${{env.cov_username}}" --password="${{env.cov_password}}" --json-output-v10=${{env.cov_output}} $mod_files
+      shell: bash
+    - if: ${{env.cov_output_format == 'json' && inputs.cov_analysis_mode != 'incremental'}}
+      run: cov-format-errors --dir ${{env.cov_intermediate_dir}} --json-output-v10 ${{env.cov_output}}
+      shell: bash
+    - if: ${{env.cov_output_format == 'html' }}
+      run: cov-format-errors --dir ${{env.cov_intermediate_dir}} --html-output ${{env.cov_output}}
+      shell: bash
+    - if: ${{env.cov_output_format == 'sarif' && inputs.cov_analysis_mode == 'incremental'}}
+      run: cov-format-errors --dir ${{env.cov_intermediate_dir}} --json-output-v10 ${{github.workspace}}/coverity_results.json
+      shell: bash
+    - if: ${{env.cov_output_format == 'sarif' }}
+      uses: lejouni/coverity-sarif-formatter@v0.1.2
+      with:
+        log_level: ${{inputs.log_level}}
+        inputfile: ${{github.workspace}}/coverity_results.json
+        outputfile: ${{env.cov_output}}
+    # Commit and that is done with coverity-commit-checker -action. In incremental case, we don't run commit phase -> results are available only locally. 
+    - if: ${{inputs.cov_analysis_mode != 'incremental'}}
+      name: Coverity Commit phase
+      uses: lejouni/coverity-commit-checker@v5.6.2
       with:
         project: ${{env.project}}
         stream: ${{env.stream}}
@@ -69,3 +103,4 @@ runs:
         break_build: ${{inputs.break_build}}
         emit_threshold: ${{inputs.emit_threshold}}
         viewID: ${{inputs.viewID}}
+
