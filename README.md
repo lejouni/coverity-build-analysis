@@ -4,7 +4,7 @@ This will run all Coverity Analysis phases by using the Coverity build capture (
 ## Prerequisities
 This Github Action expects that Coverity Analysis tools are in the runner PATH. One way to get Coverity Analysis tools into the runner PATH is to run first the [lejouni/setup-coverity-analysis](https://github.com/lejouni/setup-coverity-analysis) -action.
 
-If you are analysing repository which contains only files with follwing coding languages, you should use Coverity buildless capture [lejouni/coverity-buildless-analysis](https://github.com/lejouni/coverity-buildless-analysis):
+If you are analysing repository which contains only files with following coding languages, you should use Coverity buildless capture [lejouni/coverity-buildless-analysis](https://github.com/lejouni/coverity-buildless-analysis):
 | Language | Language identifier |
 |---------|----------|
 | Apex | apex |
