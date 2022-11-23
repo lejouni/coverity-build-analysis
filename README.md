@@ -59,7 +59,7 @@ Run the Coverity full build analysis.
 ```yaml
     - if: ${{github.event_name == 'pull_request'}}
       name: Build with Maven and Full Analyze with Coverity # This will run the full Coverity Analsysis
-      uses: lejouni/coverity-build-analysis@v4.3.5
+      uses: lejouni/coverity-build-analysis@v4.3.6
       with:
         build_command: mvn -B package --file pom.xml
 ```
@@ -67,7 +67,7 @@ Run the Coverity incremental build analysis with project mode.
 ```yaml
     - if: ${{github.event_name == 'push'}}
       name: Build with Maven and Incremental Analyze with Coverity # This will run the incremental Coverity Analsysis
-      uses: lejouni/coverity-build-analysis@v4.3.5
+      uses: lejouni/coverity-build-analysis@v4.3.6
       with:
         build_command: mvn -B package --file pom.xml
         cov_analysis_mode: incremental # Optional, but options are full (default) or incremental
@@ -113,13 +113,13 @@ jobs:
 
     - if: ${{github.event_name == 'pull_request'}}
       name: Build with Maven and Full Analyze with Coverity # This will run the full Coverity Analsysis
-      uses: lejouni/coverity-build-analysis@v4.3.5
+      uses: lejouni/coverity-build-analysis@v4.3.6
       with:
         build_command: mvn -B package --file pom.xml
 
     - if: ${{github.event_name == 'push'}}
       name: Build with Maven and Incremental Analyze with Coverity # This will run the incremental Coverity Analsysis
-      uses: lejouni/coverity-build-analysis@v4.3.5
+      uses: lejouni/coverity-build-analysis@v4.3.6
       with:
         build_command: mvn -B package --file pom.xml
         cov_analysis_mode: incremental # Optional, but options are full (default) or incremental
